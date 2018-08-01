@@ -3,73 +3,51 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Permission;
-use App\PermissionRole;
+
+use App\Http\Requests;
 
 class PermissionController extends Controller
 {
-   public function index()
-   {
-      $permissions = Permission::all();
-      $no = 0;
-      return view('permissions.index', compact('permissions', 'no'));
-   }
+    public function index(){
+      $permissions = \App\Permission::all();
+      $count = 1;
+      return view('permissions.index',compact('permissions','count'));
 
-   public function create()
-   {
-     //
-   }
+    }
 
-   public function store(Request $request)
-   {
-      $this->validate($request, [
-         'label'              => 'required',
-         'name_permission'    => 'required',
+    public function add(){
+      return view('permissions.add');
+    }
+
+    public function create(Request $request){
+      $this->validate($request,[
+        'label' => 'required',
+        'name_permission' => 'required',
       ]);
+      
+      \App\Permission::create($request->all());
 
-      $permission = Permission::create([
-         'label'           => $request->label,
-         'name_permission' => $request->name_permission,
-      ]);
+      return redirect('permissions')->with('success','1 Permission has been created');
+    }
 
-      return back()->with('success', 'Permission added');
-   }
+    public function edit($id){
+      $permission = \App\Permission::findOrFail($id);
+      return view('permissions.edit',compact('permission'));
+    }
 
-   public function show($id)
-   {
-      $permission = Permission::find($id);
-      $permissionRoles = PermissionRole::where('permission_id', $id)->get();
+    public function update($id,Request $request)
+    {
+      $permission = \App\Permission::findOrFail($id);
+      $permission->update($request->all());
+      return redirect()->route('permissions.index')->with('success','Permission has been updated successfully.');
+    }
 
-      return view('permissions.show', compact('permission', 'permissionRoles'));
-   }
+    public function delete($id)
+    {
+      $permission = \App\Permission::findOrFail($id);
+      $permission->roles()->detach();
+      $permission->delete($id);
+      return redirect()->route('permissions.index')->with('success','Permission has been deleted successfully.');
 
-   public function edit($id)
-   {
-     //
-   }
-
-
-   public function update(Request $request, $id)
-   {
-      $this->validate($request, [
-         'label'              => 'required',
-         'name_permission'    => 'required',
-      ]);
-
-      $permission = Permission::find($id);
-      $permission->update([
-         'label'           => $request->label,
-         'name_permission' => $request->name_permission,
-      ]);
-
-      return back()->with('success', 'Permission updated');
-   }
-
-   public function destroy($id)
-   {
-      $permission = Permission::find($id);
-      $permission->delete();
-
-      return back()->with('success', 'Permission deleted');
-   }
+    }
 }

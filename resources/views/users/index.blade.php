@@ -33,7 +33,7 @@
              <thead>
               <tr class="headings">
                  <th class="text-center">No </th>
-                 <th class="text-center">Name</th>
+                 <th class="text-center">Username</th>
                  <th class="text-center">Email </th>
                  <th class="text-center">Role</th>
                  <th class="text-center">Created at </th>
@@ -49,9 +49,9 @@
                 @foreach ($users as $user)
                    <tr class="even pointer">
                      <td class="text-center">{{++$no}}</td>
-                     <td class="text-center">{{$user->name}}</td>
+                     <td class="text-center">{{$user->username}}</td>
                      <td class="text-center">{{$user->email}}</td>
-                     <td class="text-center"></td>
+                     <td class="text-center">{{$user->role->name}}</td>
                      <td class="text-center">{{$user->created_at}}</td>
                      <td class="text-center">
                         <a href="{{url('users', $user->id)}}" class="btn btn-sm btn-primary"><i class="fa fa-file"></i> </a>

@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Http\Middleware;
-
+use Illuminate\Support\Facades\Auth;
 use Closure;
-use Auth;
 
-class RBACMiddleware
+class RbacMiddleware
 {
     /**
      * Handle an incoming request.
@@ -14,31 +13,29 @@ class RBACMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-   public function handle($request, Closure $next)
-   {
-      // Cek apakah User sudah login
-      if(!Auth::check()){
-           return redirect()->route('auth.login');
-      }
+    public function handle($request, Closure $next)
+    {
+        //Cek apakah User sudah login
+        if(!Auth::check()){
+            return redirect()->route('auth.login');
+        }
 
-      if(Auth::user()->role->name == 'Super Admin'){
-           return $next($request);
-      }
-      //retrieve semua permission yang dimiliki user sesuai dengan rolenya
-      $role = Auth::user()->role;
-      $permissions = [];
-      foreach($role->permissionRoles as $perm){
-           array_push($permissions, $perm->permission->route_name);
-      }
+        if(Auth::user()->role->name == 'Superadmin'){
+            return $next($request);    
+        }
+        //retrieve semua permission yang dimiliki user sesuai dengan rolenya
+        $role = Auth::user()->role;
+        $permissions = [];        
+        foreach($role->permissions as $perm){
+            array_push($permissions,$perm->name_permission);
+        }
 
-      // dd($permissions);
+        dd($permissions);
 
-      // dd($request->route()->getName());
-
-      //cek apakah user memiliki permission yang dibandingkan dengan nama route
-      if(!in_array($request->route()->getName(), $permissions)){
-           abort(403);
-      }
-      return $next($request);
-   }
+        //cek apakah user memiliki permission yang dibandingkan dengan nama route
+        if(!in_array($request->route()->getName(),$permissions)){
+            return redirect()->route('auth.error401');
+        }
+        return $next($request);
+    }
 }

@@ -3,75 +3,62 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Role;
-use App\Permission;
-use App\PermissionRole;
+
+use App\Http\Requests;
 
 class RoleController extends Controller
 {
+    public function index(){
+    	$roles = \App\Role::all();
+    	return view('roles.index',['roles' => $roles,'no' => 1]);
+    }
 
-   public function index()
-   {
-      $roles = Role::all();
-      $no = 0;
+    public function add()
+    {
+        $allpermissions = \App\Permission::all();
+        return view('roles.add',compact('allpermissions'));
+    }
 
-      return view('roles.index', compact('roles', 'no'));
-   }
+    public function create(Request $request)
+    {
+        $role = \App\Role::create($request->all());
 
-   public function create()
-   {
-     //
-   }
+        if($request->input('perms')){
+            $role->permissions()->sync($request->input('perms'));
+        }
+        
 
-   public function store(Request $request)
-   {
-      $this->validate($request,[
-         'name' => 'required'
-      ]);
+        return redirect()->route('roles.index')->with('success','1 Role has been created');
+    }
 
-      $role = Role::create([
-         'name' => $request->name
-      ]);
+    public function edit($id){
 
-      return back()->with('success', 'Role added');
-   }
+    	$role = \App\Role::findOrFail($id);
+        $rolepermissions = $role->permissions()->pluck('name_permission','permissions.id');
+    	return view('roles.edit',['role' => $role,'rolepermissions'=>$rolepermissions,'allpermissions' => \App\Permission::all()]);
+    }
 
-   public function show($id)
-   {
-      $role = Role::find($id);
-      $permissions = Permission::whereDoesntHave('permissionRoles', function($query) use ($id) {
-                                      $query->where('role_id', '=', $id);
-                                  })->get();
-      $permissionRoles = PermissionRole::where('role_id', $id)->get();
+    function update($id, Request $request){
 
-      return view('roles.show', compact('role', 'permissions', 'permissionRoles'));
-   }
+        //dd($request->all());
+    	
+        $role = \App\Role::findOrFail($id);    	   	
+    	if($request->input('perms')){
+    	   $role->permissions()->sync($request->input('perms'));
+        }
+       
+    	
+    	$role->update(['name' => $request->input('name')]);
 
-   public function edit($id)
-   {
-     //
-   }
+    	return redirect()->route('roles.index')->with('success','Edit Role Successfully');
+    }
 
-   public function update(Request $request, $id)
-   {
-      $this->validate($request, [
-         'name' => 'required',
-      ]);
+    public function delete($id)
+    {
+      $role = \App\Role::findOrFail($id);
+      $role->permissions()->detach();
+      $role->delete($id);
+      return redirect()->route('roles.index')->with('success','Role has been deleted successfully.');
 
-      $role = Role::find($id);
-      $role->update([
-         'name' => $request->name,
-      ]);
-
-      return back()->with('success', 'Role updated');
-
-   }
-
-   public function destroy($id)
-   {
-      $role = Role::find($id);
-      $role->delete();
-
-      return back()->with('success', 'Role deleted');
-   }
+    }
 }
